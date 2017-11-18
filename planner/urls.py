@@ -18,5 +18,6 @@ from django.contrib import admin
 
 urlpatterns = [
     url(r'^lessons/', include('lessons.urls')),
+    url(r'^practices/', include('practices.urls')),
     url(r'^admin/', admin.site.urls),
 ]
