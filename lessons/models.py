@@ -23,9 +23,12 @@ class Attachment(models.Model):
     lessons         = models.ManyToManyField(Lesson, blank=False, through=Lesson.attachments.through)
 
 class HomeworkItem(models.Model):
-    name            = models.CharField(max_length=255, unique=True, blank=False)
+    name            = models.CharField(max_length=255, blank=False)
     proficiency     = models.IntegerField(default=1, validators=[MaxValueValidator(5), MinValueValidator(1)])
     lessons         = models.ManyToManyField(Lesson, blank=False, through=Lesson.homework_items.through)
+
+    class Meta:
+        unique_together = ('name', 'proficiency',)
 
     def __str__(self):
         return "{} ({}/5)".format(self.name, self.proficiency)
