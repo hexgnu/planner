@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Practice Plan #{{ practice }}</h2>
+  <ul>
+    {% for hit in homework_item_timers %}
+    <li>{{ hit }} <span class='timer'>({{ hit.seconds }} seconds)</span> <a href="#" data-start-seconds="{{hit.seconds}}" class='timer-control'>Start Timer</a>
+      <form action="{% url 'practices/create_timer' %}" method="post" style="display:none;">{% csrf_token %}
+        <input type="hidden" name="practice_id" value="{{practice}}"/>
+        <input type="hidden" name="id" value="{{hit.id}}"/>
+        <input type="hidden" name="seconds" value="{{hit.seconds}}"/>
+        <input type="submit" value="Stop Timer"/>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <form action="finish/" method="post">{% csrf_token %}
+    <input type="hidden" name="id" value="{{practice}}"/>
+    <input type="submit" value="Finish Practice"/>
+  </form>
+
+  <script type='text/javascript'>
+    String.prototype.toHHMMSS = function () {
+        var sec_num = parseInt(this, 10); // don't forget the second param
+        var hours   = Math.floor(sec_num / 3600);
+        var minutes = Math.floor((sec_num - (hours * 3600)) / 60);
+        var seconds = sec_num - (hours * 3600) - (minutes * 60);
+
+        if (hours   < 10) {hours   = "0"+hours;}
+        if (minutes < 10) {minutes = "0"+minutes;}
+        if (seconds < 10) {seconds = "0"+seconds;}
+        return hours+':'+minutes+':'+seconds;
+    }
+
+    var start = 0;
+    var startSeconds = 0;
+    $('.timer-control').on('click', function() {
+      $(this).hide();
+      startSeconds = $(this).data('start-seconds');
+      var $form = $(this).parent().children('form');
+      $form.show();
+
+      var $timer = $(this).parent().children('.timer');
+
+      start = new Date;
+
+      setInterval(function() {
+        var seconds = Math.round((new Date - start) / 1000) + startSeconds;
+        $timer.text(seconds.toString().toHHMMSS());
+        $timer.data('seconds', seconds);
+        $form.children('input[name=seconds]').val(seconds);
+      }, 1000);
+    })
+  </script>
+{% endblock %}
+
+

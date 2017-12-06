@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Practice Plan and Lesson Log</h1>
+
+  <div class="row">
+    <div class="col-md-4">
+      <h2>Current Proficiency</h2>
+
+      <ul>
+        {% for hi in homework_items %}
+          <li>{{ hi }}</li>
+        {% endfor%}
+      </ul>
+
+      <a href="{% url 'practices/index' %}">Practice!</a>
+    </div>
+
+    <div class="col-md-8">
+      <div class="row">
+        <h2>Proficiency over time</h2>
+
+        <img src="proficiency.png"/>
+      </div>
+
+      <div class="row">
+        <h2>Practice over time</h2>
+
+        <img src="practice.png"/>
+      </div>
+    </div>
+  </div>
+
+  <hr/>
+  {% for lesson in lessons %}
+    <div class="row">
+      <div class="col-md-8">
+        <h2>{{ lesson }}</h2>
+
+        <p> {{lesson.notes}} </p>
+
+        <h2>Homework Items:</h2>
+        <ul>
+          {% for hi in lesson.homework_items.all %}
+            <li>{{ hi }}</li>
+          {% endfor %}
+        </ul>
+
+        <h2>Attachments</h2>
+        <ul>
+          {% for attachment in lesson.attachments.all %}
+            <li><a href="{{ attachment.url }}">{{attachment.url}}</a></li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    <hr/>
+  {% endfor %}
+{% endblock %}

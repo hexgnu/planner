@@ -1,9 +1,12 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .models import Lesson, HomeworkItem
+from practices.models import Practice,HomeworkItemTimer
 import random
 import django
 import datetime
+import pandas as pd
+import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -23,20 +26,61 @@ def teacher_edit(request):
 def student_edit(request):
     return render(request, 'student_edit.html', {'lesson': Lesson})
 
-def progress_png(request):
+def practice_png(request):
     lessons = Lesson.objects.order_by('-scheduled_at').all()
 
     rows = []
     
-    x=[]
-    y=[]
-    ax.plot_date(x, y, '-')
-    ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
-    fig.autofmt_xdate()
-    canvas=FigureCanvas(fig)
-    response=django.http.HttpResponse(content_type='image/png')
+    for l in lessons:
+        for hi in l.homework_items.all():
+            if 'homework_item_name' not in request.GET.keys() or hi.name == request.GET['homework_item_name']:
+                practices = Practice.objects.filter(lesson_id = l.id)
+                timers = HomeworkItemTimer.objects.filter(practice__in=practices, homework_item_id=hi.id)
+                total_seconds = sum([t.seconds for t in timers])
+                rows.append({'date': l.scheduled_at, 'item': hi.name, 'y': total_seconds})
+
+    df = pd.DataFrame(rows)
+
+    df = df.pivot_table(index=['date'], columns='item')
+    df.columns = df.columns.droplevel().rename(None)
+
+
+    fig = Figure()
+    ax = fig.add_subplot(111)
+    df.plot(ax=ax)
+    canvas = FigureCanvas(fig)
+    response = HttpResponse(content_type='image/png')
     canvas.print_png(response)
     return response
+
+def proficiency_png(request):
+    lessons = Lesson.objects.order_by('-scheduled_at').all()
+
+    rows = []
+    
+    for l in lessons:
+        for hi in l.homework_items.all():
+            if 'homework_item_name' not in request.GET.keys() or hi.name == request.GET['homework_item_name']:
+                practices = Practice.objects.filter(lesson_id = l.id)
+                timers = HomeworkItemTimer.objects.filter(practice__in=practices, homework_item_id=hi.id)
+                total_seconds = sum([t.seconds for t in timers])
+                rows.append({'date': l.scheduled_at, 'item': hi.name, 'y': hi.proficiency})
+
+    df = pd.DataFrame(rows)
+
+    df = df.pivot_table(index=['date'], columns='item')
+    df.columns = df.columns.droplevel().rename(None)
+
+
+    fig = Figure()
+    ax = fig.add_subplot(111)
+    df.plot(drawstyle='steps', ax=ax).legend(bbox_to_anchor=(0.25, 0.4))
+
+    canvas = FigureCanvas(fig)
+    response = HttpResponse(content_type='image/png')
+    canvas.print_png(response)
+    return response
+
 
 
 # Create your views here.
